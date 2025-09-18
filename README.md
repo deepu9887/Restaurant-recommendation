@@ -88,6 +88,44 @@ Here are some screenshots of the project:
 
 🤖 Recommendation Results
 
+🛣️ Roadmap
+
+ Project Setup: Flask app structure with templates/, static/, and assets/.
+
+ Frontend UI: Navbar, homepage, filters, recommendations slider, and restaurant grid.
+
+ Data Integration: Load restaurants from restaurants.json.
+
+ Filters: Search by name, filter by city, cuisine, and rating.
+
+ Sorting: Sort by rating, votes, and cost.
+
+ Wishlist: Add/remove restaurants to favorites (local storage).
+
+ Recommendations: ML-powered similar restaurants (Cosine similarity).
+
+ Dark Mode: Toggle between light & dark themes.
+
+ Login/Signup: JSON-based user authentication.
+
+ Feedback Page: Contact & feedback form with validation.
+
+ README with Assets: Banner, screenshots, features, and docs.
+
+🔮 Future Enhancements
+
+ Database Integration: Replace JSON with SQLite or MongoDB.
+
+ API Integration: Connect with Zomato/Yelp/Google Places API for live data.
+
+ User Profiles: Save wishlist, reviews, and preferences.
+
+ Restaurant Reviews: Users can post ratings & comments.
+
+ Mobile App: Build with Flutter/React Native.
+
+ Deployment: Deploy on Render / Railway / AWS with CI/CD.
+
 <img width="1920" height="1080" alt="Screenshot 1" src="https://github.com/user-attachments/assets/ffbf6749-4a27-4c41-ae32-c82f7fde1694" />
 
 
