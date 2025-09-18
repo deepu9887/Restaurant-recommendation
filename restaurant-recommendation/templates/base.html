@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Restaurant Finder{% endblock %}</title>
+  <meta name="theme-color" content="#ff6a00">
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    /* Navbar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(90deg, #ff6a00, #ee0979);
+      padding: 12px 20px;
+      color: white;
+      position: relative;
+      z-index: 1000;
+    }
+    .logo { font-size: 22px; font-weight: bold; }
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 18px;
+      margin: 0;
+      padding: 0;
+      align-items: center;
+    }
+    .nav-links li a {
+      text-decoration: none;
+      color: white;
+      font-weight: bold;
+      font-size: 15px;
+      transition: 0.3s;
+    }
+    .nav-links li a:hover { color: #ffd700; }
+
+    /* Hamburger */
+    .hamburger {
+      font-size: 26px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: white;
+      margin-right: 12px;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      height: 100%;
+      width: 0;
+      position: fixed;
+      top: 0; left: 0;
+      background: linear-gradient(180deg, #ee0979, #ff6a00);
+      overflow-x: hidden;
+      transition: width 0.35s ease-in-out;
+      padding-top: 60px;
+      z-index: 2000;
+    }
+    .sidebar.open { width: 250px; }
+    .sidebar a {
+      padding: 12px 24px;
+      text-decoration: none;
+      font-size: 18px;
+      color: white;
+      display: block;
+      transition: background 0.2s;
+    }
+    .sidebar a:hover { background: rgba(255,255,255,0.2); }
+    .sidebar .closebtn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 30px;
+      cursor: pointer;
+    }
+
+    /* Flash Messages */
+    .flash-messages {
+      text-align: center;
+      margin: 10px auto;
+    }
+    .flash-messages .success { color: green; font-weight: bold; }
+    .flash-messages .error { color: red; font-weight: bold; }
+    .flash-messages .info { color: blue; font-weight: bold; }
+
+    /* Footer */
+    .footer {
+      margin-top: 40px;
+      padding: 20px;
+      background: linear-gradient(90deg, #ee0979, #ff6a00);
+      color: white;
+      text-align: center;
+      border-top: 3px solid #ffd700;
+    }
+
+    /* 🌙 Dark Mode Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 24px;
+    }
+    .switch input { display: none; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px; width: 18px;
+      left: 3px; bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #ff6a00; }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    /* 🌙 Dark Mode Styles */
+    body.dark-mode {
+      background: #121212;
+      color: #f5f5f5;
+    }
+    body.dark-mode .navbar,
+    body.dark-mode .footer,
+    body.dark-mode .sidebar {
+      background: #1e1e1e;
+      color: #f5f5f5;
+    }
+    body.dark-mode .nav-links li a,
+    body.dark-mode .sidebar a { color: #f5f5f5; }
+    body.dark-mode .nav-links li a:hover,
+    body.dark-mode .sidebar a:hover { color: #ffd700; }
+    body.dark-mode .footer { border-top: 3px solid #444; }
+
+    /* 🌙 Dark Mode for Cards & Modals */
+    body.dark-mode .card,
+    body.dark-mode .rec-card,
+    body.dark-mode .modal-content,
+    body.dark-mode .wishlist,
+    body.dark-mode .recommendations {
+      background: #1e1e1e;
+      color: #e0e0e0;
+      box-shadow: 0px 4px 12px rgba(255,255,255,0.05);
+    }
+    body.dark-mode .card h3,
+    body.dark-mode .rec-card h4,
+    body.dark-mode .modal-content h3 {
+      color: #ffb74d; /* amber for contrast */
+    }
+    body.dark-mode .card button,
+    body.dark-mode .scroll-btn {
+      background: #ff6a00;
+      color: #fff;
+    }
+    body.dark-mode .card button:hover,
+    body.dark-mode .scroll-btn:hover {
+      background: #ee0979;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <header class="navbar">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button class="hamburger" onclick="openSidebar()">☰</button>
+      <div class="logo">🍴 Restaurant Finder</div>
+    </div>
+    <ul class="nav-links">
+      <li><a href="{{ url_for('homepage') }}">Home</a></li>
+      <li><a href="{{ url_for('restaurants_page') }}">Restaurants</a></li>
+      <li><a href="{{ url_for('wishlist_page') }}">Wishlist</a></li>
+      <li><a href="{{ url_for('about_page') }}">About</a></li>
+      <li><a href="{{ url_for('contact_feedback_page') }}">Contact & Feedback</a></li>
+      {% if session.get('user') %}
+        <li><a href="#">👋 {{ session['user'] }}</a></li>
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+      {% else %}
+        <li><a href="{{ url_for('auth_page') }}">Login / Signup</a></li>
+      {% endif %}
+      <!-- 🌙 Dark Mode Toggle -->
+      <li>
+        <label class="switch">
+          <input type="checkbox" id="darkModeToggle">
+          <span class="slider"></span>
+        </label>
+      </li>
+    </ul>
+  </header>
+
+  <!-- Sidebar -->
+  <div id="sidebar" class="sidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeSidebar()">&times;</a>
+    <a href="{{ url_for('homepage') }}" onclick="closeSidebar()">🏠 Home</a>
+    <a href="{{ url_for('restaurants_page') }}" onclick="closeSidebar()">🍴 Restaurants</a>
+    <a href="{{ url_for('wishlist_page') }}" onclick="closeSidebar()">❤️ Wishlist</a>
+    <a href="{{ url_for('about_page') }}" onclick="closeSidebar()">ℹ️ About</a>
+    <a href="{{ url_for('contact_feedback_page') }}" onclick="closeSidebar()">📞⭐ Contact & Feedback</a>
+    {% if session.get('user') %}
+      <a href="#" onclick="closeSidebar()">👋 Welcome, {{ session['user'] }}</a>
+      <a href="{{ url_for('logout') }}" onclick="closeSidebar()">🚪 Logout</a>
+    {% else %}
+      <a href="{{ url_for('auth_page') }}" onclick="closeSidebar()">🔑 Login / Signup</a>
+    {% endif %}
+  </div>
+
+  <!-- Flash Messages -->
+  <div class="flash-messages">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Content -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>© 2025 Restaurant Finder | Built with ❤️ by Mamidi Deepthi Paul</p>
+  </footer>
+
+  <!-- Sidebar Script -->
+  <script>
+    function openSidebar() {
+      document.getElementById("sidebar").classList.add("open");
+    }
+    function closeSidebar() {
+      document.getElementById("sidebar").classList.remove("open");
+    }
+  </script>
+
+  <!-- JS Scripts -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

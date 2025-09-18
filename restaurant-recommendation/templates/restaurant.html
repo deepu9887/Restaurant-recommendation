@@ -1,0 +1,198 @@
+{% extends "base.html" %} 
+{% block title %}Restaurants | Restaurant Finder{% endblock %}
+{% block content %}
+
+<section class="restaurant-page">
+  <h1>🍴 Find Your Favorite Restaurant</h1>
+
+  <!-- 🔍 Search + Filter + Sort Section -->
+  <section class="filters sticky-filters">
+    <input type="text" id="search" placeholder="Search restaurants...">
+
+    <!-- City dropdown -->
+    <select id="cityFilter">
+      <option value="">Select City</option>
+    </select>
+
+    <!-- Cuisine dropdown -->
+    <select id="cuisineFilter">
+      <option value="">Select Cuisine</option>
+    </select>
+
+    <select id="ratingFilter">
+      <option value="">All Ratings</option>
+      <option value="4">4★ & above</option>
+      <option value="3">3★ & above</option>
+      <option value="2">2★ & above</option>
+    </select>
+
+    <select id="sortFilter">
+      <option value="">Sort By</option>
+      <option value="rating">Rating (High → Low)</option>
+      <option value="votes">Votes (High → Low)</option>
+      <option value="cost_low">Cost (Low → High)</option>
+      <option value="cost_high">Cost (High → Low)</option>
+    </select>
+
+    <button onclick="loadRestaurants()">Apply</button>
+  </section>
+
+  <!-- ⭐ Recommendations Slider -->
+  <section class="recommendations">
+    <h2>⭐ Recommended for You</h2>
+    <div class="rec-slider-wrapper">
+      <button class="scroll-btn left" onclick="scrollLeft()">⬅</button>
+      <div class="rec-slider" id="recSlider"></div>
+      <button class="scroll-btn right" onclick="scrollRight()">➡</button>
+    </div>
+  </section>
+
+  <!-- 📋 Restaurant Grid -->
+  <main>
+    <h2>All Restaurants</h2>
+    <div id="restaurantGrid" class="grid"></div>
+
+    <!-- Smart Pagination -->
+    <div id="pagination"></div>
+
+    <div id="loading" style="display:none; text-align:center; margin:20px;">
+      <p>⏳ Loading restaurants...</p>
+    </div>
+  </main>
+
+  <!-- ❤️ Wishlist -->
+  <section id="wishlist" class="wishlist"></section>
+
+  <!-- 🔮 Modal -->
+  <div id="recModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h3 id="modalTitle"></h3>
+      <div id="modalResults"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Main JS -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<script>
+// ✅ Load cities and cuisines dynamically from restaurants.json
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const response = await fetch("/static/data/restaurants.json");
+    const data = await response.json();
+
+    const citySet = new Set();
+    const cuisineSet = new Set();
+
+    data.forEach(r => {
+      if (r.city) citySet.add(r.city.trim());
+      if (r.cuisines) {
+        r.cuisines.split(",").forEach(c => cuisineSet.add(c.trim()));
+      }
+    });
+
+    // Populate cities
+    const cityFilter = document.getElementById("cityFilter");
+    citySet.forEach(city => {
+      const opt = document.createElement("option");
+      opt.value = city;
+      opt.textContent = city; // ✅ Full name
+      cityFilter.appendChild(opt);
+    });
+
+    // Populate cuisines
+    const cuisineFilter = document.getElementById("cuisineFilter");
+    cuisineSet.forEach(cuisine => {
+      const opt = document.createElement("option");
+      opt.value = cuisine;
+      opt.textContent = cuisine; // ✅ Full name
+      cuisineFilter.appendChild(opt);
+    });
+
+  } catch (err) {
+    console.error("Error loading cities/cuisines:", err);
+  }
+});
+</script>
+
+<style>
+/* === Full-page background === */
+.restaurant-page {
+  position: relative;
+  min-height: calc(100vh - 160px);
+  background: url("{{ url_for('static', filename='images/restaurant-bg.jpg') }}") no-repeat center center/cover;
+  padding: 40px 20px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.restaurant-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.35);
+  z-index: 0;
+}
+.restaurant-page > * { position: relative; z-index: 1; }
+
+/* Title */
+h1 {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 36px;
+  color: #ff6a00;
+}
+
+/* 🎯 Sticky Filters */
+.sticky-filters {
+  position: sticky;
+  top: 70px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 12px;
+  border-radius: 8px;
+  z-index: 900;
+  backdrop-filter: blur(6px);
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Clean Search + Select + Button */
+.sticky-filters input[type="text"],
+.sticky-filters select {
+  background: #fff;
+  border: 2px solid #ff4081;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 14px;
+  outline: none;
+  transition: 0.3s;
+}
+
+.sticky-filters input[type="text"]:focus,
+.sticky-filters select:focus {
+  border-color: #e73370;
+  box-shadow: 0 0 5px rgba(231, 51, 112, 0.5);
+}
+
+.sticky-filters button {
+  background: #ff4081;
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.sticky-filters button:hover {
+  background: #e73370;
+}
+</style>
+
+{% endblock %}

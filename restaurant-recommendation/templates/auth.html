@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Login & Signup | Restaurant Finder{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="auth-container">
+    <h1>🍴 Welcome to Restaurant Finder</h1>
+    <p class="intro">Login to continue or create a new account below 👇</p>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Login Form -->
+    <div class="form-box">
+      <h2>🔑 Login</h2>
+      <form method="post" action="{{ url_for('auth_page') }}">
+        <input type="hidden" name="form_type" value="login">
+
+        <label for="username">Username</label>
+        <input type="text" name="username" id="username" required>
+
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" required>
+
+        <button type="submit">✅ Login</button>
+      </form>
+    </div>
+
+    <!-- Signup Form -->
+    <div class="form-box">
+      <h2>📝 Signup</h2>
+      <form method="post" action="{{ url_for('auth_page') }}">
+        <input type="hidden" name="form_type" value="signup">
+
+        <label for="username">Username</label>
+        <input type="text" name="username" id="signup_username" required>
+
+        <label for="email">Email</label>
+        <input type="email" name="email" id="signup_email" required>
+
+        <label for="password">Password</label>
+        <input type="password" name="password" id="signup_password" required>
+
+        <button type="submit">✨ Create Account</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<style>
+/* 🔥 Auth Page Background (same as restaurant page) */
+.auth-page {
+  background: url("/static/images/restaurant-bg.jpg") no-repeat center center fixed;
+  background-size: cover;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+/* Container */
+.auth-container {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 30px;
+  border-radius: 14px;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+
+.auth-container h1 {
+  color: #ee0979;
+  margin-bottom: 10px;
+}
+.auth-container .intro {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Flash Messages */
+.flash-container {
+  margin-bottom: 20px;
+}
+.flash {
+  padding: 10px;
+  border-radius: 8px;
+  margin: 6px 0;
+}
+.flash.success { background: #e0ffe0; color: #0a0; }
+.flash.error   { background: #ffe0e0; color: #a00; }
+.flash.info    { background: #e0f0ff; color: #0077cc; }
+
+/* Form boxes */
+.form-box {
+  margin: 20px 0;
+  padding: 20px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  text-align: left;
+}
+.form-box h2 {
+  margin-bottom: 12px;
+  color: #ff6a00;
+}
+label {
+  font-weight: bold;
+  color: #333;
+}
+input {
+  display: block;
+  width: 100%;
+  margin: 8px 0 16px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(90deg, #ff6a00, #ee0979);
+  transition: transform 0.2s, background 0.3s;
+}
+button:hover {
+  background: linear-gradient(90deg, #ee0979, #ff6a00);
+  transform: scale(1.05);
+}
+</style>
+{% endblock %}

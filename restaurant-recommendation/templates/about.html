@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}About | Restaurant Finder{% endblock %}
+{% block content %}
+
+<section class="about-page">
+  <h1>ℹ️ About Us</h1>
+  <div class="about-content">
+    <p>
+      Welcome to <b>Restaurant Finder</b> 🍴 – your one-stop destination for discovering the best dining spots near you!  
+      Whether you're craving pizza, curry, or street food, we bring the tastiest options right to your screen.  
+    </p>
+    <p>
+      Our mission is simple: help food lovers explore restaurants with ease.  
+      Browse by cuisine, city, or rating, and save your favorites to your personal wishlist ❤️.
+    </p>
+    <p>
+      Built with passion for foodies, by foodies.  
+      Thank you for being part of our journey! 🙌
+    </p>
+  </div>
+</section>
+
+<style>
+/* === Full-page background image === */
+.about-page {
+  position: relative;
+  min-height: calc(100vh - 160px);
+  background: url("{{ url_for('static', filename='images/restaurant-bg.jpg') }}") no-repeat center center/cover;
+  padding: 40px 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.about-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.35);
+  z-index: 0;
+}
+.about-page > * { position: relative; z-index: 1; }
+
+/* Title */
+.about-page h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 36px;
+  color: #ff6a00;
+}
+
+/* Content */
+.about-content {
+  max-width: 800px;
+  margin: 0 auto;
+  background: rgba(255,255,255,0.9);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+  line-height: 1.6;
+  font-size: 18px;
+  color: #333;
+}
+</style>
+
+{% endblock %}
