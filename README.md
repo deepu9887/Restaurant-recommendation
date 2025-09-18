@@ -90,5 +90,6 @@ Here are some screenshots of the project:
 
 <img width="1920" height="1080" alt="Screenshot 1" src="https://github.com/user-attachments/assets/ffbf6749-4a27-4c41-ae32-c82f7fde1694" />
 
+
 <img width="1920" height="1080" alt="Screenshot 2" src="https://github.com/user-attachments/assets/0e865900-123c-4191-ac6b-72a5437448ca" />
 
