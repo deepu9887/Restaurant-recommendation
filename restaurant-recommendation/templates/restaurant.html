@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+{% block title %}Restaurants | Restaurant Finder{% endblock %}
+{% block content %}
+
+<section class="restaurant-page">
+  <h1>🍴 Find Your Favorite Restaurant</h1>
+
+  <!-- 🔍 Search + Filter + Sort Section -->
+  <section class="filters sticky-filters">
+    <input type="text" id="search" placeholder="Search restaurants...">
+
+    <!-- City dropdown -->
+    <select id="cityFilter">
+      <option value="">Select City</option>
+    </select>
+
+    <!-- Cuisine dropdown -->
+    <select id="cuisineFilter">
+      <option value="">Select Cuisine</option>
+    </select>
+
+    <!-- Context-aware filters -->
+    <select id="weatherFilter" onchange="refreshRecommendations()">
+      <option value="">Any Weather</option>
+      <option value="rainy">Rainy</option>
+      <option value="sunny">Sunny</option>
+      <option value="cold">Cold</option>
+      <option value="hot">Hot</option>
+    </select>
+
+    <select id="contextTimeFilter" onchange="refreshRecommendations()">
+      <option value="">Any Time</option>
+      <option value="morning">Morning</option>
+      <option value="afternoon">Afternoon</option>
+      <option value="evening">Evening</option>
+      <option value="night">Night</option>
+    </select>
+
+    <!-- Multi-factor filters -->
+    <select id="moodFilter">
+      <option value="">Any Mood</option>
+      <option value="casual">Casual</option>
+      <option value="formal">Formal</option>
+      <option value="party">Party</option>
+      <option value="study">Study</option>
+    </select>
+
+    <select id="timeFilter">
+      <option value="">Any Meal</option>
+      <option value="breakfast">Breakfast</option>
+      <option value="lunch">Lunch</option>
+      <option value="dinner">Dinner</option>
+      <option value="snacks">Snacks</option>
+    </select>
+
+    <select id="budgetFilter">
+      <option value="">Any Budget</option>
+      <option value="low">Low (₹)</option>
+      <option value="medium">Medium (₹₹)</option>
+      <option value="high">High (₹₹₹)</option>
+    </select>
+
+    <select id="groupFilter">
+      <option value="">Any Group Size</option>
+      <option value="solo">Solo</option>
+      <option value="2-4">2–4 People</option>
+      <option value="5+">5+ People</option>
+    </select>
+
+    <select id="ratingFilter">
+      <option value="">All Ratings</option>
+      <option value="4">4★ & above</option>
+      <option value="3">3★ & above</option>
+      <option value="2">2★ & above</option>
+    </select>
+
+    <select id="sortFilter">
+      <option value="">Sort By</option>
+      <option value="rating">Rating (High → Low)</option>
+      <option value="votes">Votes (High → Low)</option>
+      <option value="cost_low">Cost (Low → High)</option>
+      <option value="cost_high">Cost (High → Low)</option>
+    </select>
+
+    <button onclick="loadRestaurants()">Apply</button>
+  </section>
+
+  <!-- ⭐ Recommendations Slider -->
+  <section class="recommendations">
+    <h2>⭐ Recommended for You</h2>
+    <div class="carousel-container">
+      <button class="carousel-btn prev" onclick="scrollCarousel(-1)">❮</button>
+      <div class="rec-slider" id="recSlider"></div>
+      <button class="carousel-btn next" onclick="scrollCarousel(1)">❯</button>
+    </div>
+  </section>
+
+  <!-- 📋 Restaurant Grid -->
+  <main>
+    <h2>All Restaurants</h2>
+    <div id="restaurantGrid" class="grid"></div>
+
+    <!-- Smart Pagination -->
+    <div id="pagination"></div>
+
+    <div id="loading" style="display:none; text-align:center; margin:20px;">
+      <p>⏳ Loading restaurants...</p>
+    </div>
+  </main>
+
+  <!-- ❤️ Wishlist -->
+  <section id="wishlist" class="wishlist"></section>
+
+  <!-- 📝 Applied Filters Summary -->
+  <section id="appliedFilters" class="applied-filters">
+    <h3>📌 Applied Filters</h3>
+    <p id="appliedFiltersText">No filters applied yet.</p>
+  </section>
+
+  <!-- 🔮 Modal -->
+  <div id="recModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h3 id="modalTitle"></h3>
+      <div id="modalResults"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 📊 Dashboard Analytics -->
+<section class="dashboard">
+  <h2>📊 Recommendation Insights</h2>
+  <div class="charts">
+    <canvas id="cuisineChart"></canvas>
+    <canvas id="ratingChart"></canvas>
+  </div>
+</section>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// ✅ Fetch analytics data from backend
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const res = await fetch("/api/analytics"); // You need to provide this API in Flask
+    const data = await res.json();
+
+    // --- Cuisine Chart ---
+    new Chart(document.getElementById("cuisineChart"), {
+      type: "bar",
+      data: {
+        labels: data.cuisines.labels,
+        datasets: [{
+          label: "Top Cuisines Recommended",
+          data: data.cuisines.counts,
+          backgroundColor: "rgba(75, 192, 192, 0.6)"
+        }]
+      },
+      options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    // --- Rating Distribution ---
+    new Chart(document.getElementById("ratingChart"), {
+      type: "pie",
+      data: {
+        labels: ["Excellent (4.5+)", "Good (3–4.4)", "Average (<3)"],
+        datasets: [{
+          data: data.ratings,
+          backgroundColor: ["#4CAF50", "#FFC107", "#F44336"]
+        }]
+      },
+      options: { responsive: true }
+    });
+  } catch (err) {
+    console.error("Error loading analytics:", err);
+  }
+});
+</script>
+
+<style>
+.dashboard {
+  margin: 50px auto;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  max-width: 900px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+  text-align: center;
+}
+.charts {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 20px;
+}
+.charts canvas {
+  width: 400px !important;
+  height: 300px !important;
+}
+</style>
+
+<!-- Main JS -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<script>
+// ✅ Load cities and cuisines dynamically from Flask API
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const response = await fetch("/api/filters");
+    const data = await response.json();
+    const cityFilter = document.getElementById("cityFilter");
+    data.cities.forEach(city => {
+      const opt = document.createElement("option");
+      opt.value = city;
+      opt.textContent = city;
+      cityFilter.appendChild(opt);
+    });
+    const cuisineFilter = document.getElementById("cuisineFilter");
+    data.cuisines.forEach(cuisine => {
+      const opt = document.createElement("option");
+      opt.value = cuisine;
+      opt.textContent = cuisine;
+      cuisineFilter.appendChild(opt);
+    });
+  } catch (err) {
+    console.error("Error loading filters:", err);
+  }
+});
+
+// ✅ Update Applied Filters summary
+function updateAppliedFilters() {
+  const getVal = id => document.getElementById(id)?.value || "Any";
+  const summary = `
+    🔍 Search: ${getVal("search")} | 🏙 City: ${getVal("cityFilter")} | 🍽 Cuisine: ${getVal("cuisineFilter")} |
+    🌦️ Weather: ${getVal("weatherFilter")} | ⏰ Context Time: ${getVal("contextTimeFilter")} |
+    😃 Mood: ${getVal("moodFilter")} | 🍽 Meal: ${getVal("timeFilter")} | 💰 Budget: ${getVal("budgetFilter")} |
+    👥 Group: ${getVal("groupFilter")} | ⭐ Rating: ${getVal("ratingFilter")}
+  `;
+  document.getElementById("appliedFiltersText").textContent = summary;
+}
+document.querySelector(".filters button").addEventListener("click", () => {
+  updateAppliedFilters();
+});
+
+// ✅ Refresh Recommendations when context filters change
+function refreshRecommendations() {
+  const weather = document.getElementById("weatherFilter")?.value || "";
+  const contextTime = document.getElementById("contextTimeFilter")?.value || "";
+  const params = new URLSearchParams();
+  if (weather) params.append("weather", weather);
+  if (contextTime) params.append("time", contextTime);
+
+  fetch(`/api/recommendations?${params.toString()}`)
+    .then(res => res.json())
+    .then(data => {
+      const slider = document.getElementById("recSlider");
+      if (!slider) return;
+      slider.innerHTML = "";
+      (data || []).forEach(r => {
+        const safeName = r["Restaurant Name"] || "";
+        const card = document.createElement("div");
+        card.className = "rec-card";
+        card.innerHTML = `
+          <img src="${r.Image_URL || '/static/images/food1.jpg'}" alt="${safeName}">
+          <h4>${safeName}</h4>
+          <p><b>City:</b> ${r.City || ""}</p>
+          <p><b>Cuisine:</b> ${r.Cuisines || ""}</p>
+          <p><b>Rating:</b> ⭐ ${r["Aggregate rating"] || ""}</p>
+          <!-- Explainable AI Box -->
+          <div class="xai-box">
+            <h4>🤖 Why this recommendation?</h4>
+            <ul>
+              <li>✔ Matches your interest in <b>${r.Cuisines || "preferred cuisine"}</b></li>
+              <li>✔ High rating: <b>${r["Aggregate rating"] || "N/A"}</b></li>
+              <li>✔ Popular choice in <b>${r.City || "your city"}</b></li>
+            </ul>
+          </div>
+        `;
+        slider.appendChild(card);
+      });
+    })
+    .catch(err => console.error("Error refreshing recommendations:", err));
+}
+
+// ✅ Carousel scroll
+function scrollCarousel(direction) {
+  const slider = document.getElementById("recSlider");
+  if (!slider) return;
+  const cardWidth = slider.querySelector(".rec-card")?.offsetWidth || 220;
+  slider.scrollBy({ left: direction * (cardWidth + 16), behavior: "smooth" });
+}
+
+// ✅ Auto-scroll with pause on hover
+let autoScroll;
+function startAutoScroll() {
+  stopAutoScroll();
+  autoScroll = setInterval(() => scrollCarousel(1), 3000);
+}
+function stopAutoScroll() {
+  if (autoScroll) clearInterval(autoScroll);
+}
+document.addEventListener("DOMContentLoaded", () => {
+  const slider = document.getElementById("recSlider");
+  if (slider) {
+    slider.addEventListener("mouseenter", stopAutoScroll);
+    slider.addEventListener("mouseleave", startAutoScroll);
+    startAutoScroll();
+  }
+  refreshRecommendations(); // Load on page start
+});
+</script>
+
+<style>
+/* === Full-page background === */
+.restaurant-page {
+  position: relative;
+  min-height: calc(100vh - 160px);
+  background: url("{{ url_for('static', filename='images/restaurant-bg.jpg') }}") no-repeat center center/cover;
+  padding: 40px 20px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.restaurant-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.35);
+  z-index: 0;
+}
+.restaurant-page > * { position: relative; z-index: 1; }
+
+/* Title */
+h1 {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 36px;
+  color: #ff6a00;
+}
+
+/* 🎯 Sticky Filters */
+.sticky-filters {
+  position: sticky;
+  top: 70px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 12px;
+  border-radius: 8px;
+  z-index: 900;
+  backdrop-filter: blur(6px);
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.sticky-filters input[type="text"],
+.sticky-filters select {
+  background: #fff;
+  border: 2px solid #ff4081;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 14px;
+  outline: none;
+  transition: 0.3s;
+}
+.sticky-filters input[type="text"]:focus,
+.sticky-filters select:focus {
+  border-color: #e73370;
+  box-shadow: 0 0 5px rgba(231, 51, 112, 0.5);
+}
+.sticky-filters button {
+  background: #ff4081;
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.sticky-filters button:hover { background: #e73370; }
+
+/* === Applied Filters Summary === */
+.applied-filters {
+  margin: 40px auto;
+  padding: 15px;
+  max-width: 900px;
+  background: rgba(255,248,248,0.9);
+  border-radius: 10px;
+  text-align: center;
+  font-size: 15px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+}
+.applied-filters h3 {
+  margin-bottom: 8px;
+  color: #ff6a00;
+}
+.applied-filters p {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
+/* === Carousel Styles === */
+#recSlider {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  gap: 16px;
+  padding: 10px;
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+}
+#recSlider::-webkit-scrollbar { display: none; }
+.rec-card {
+  flex: 0 0 auto;
+  width: 220px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  text-align: center;
+  padding: 10px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  scroll-snap-align: start;
+}
+.rec-card img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.rec-card:hover { transform: scale(1.05); }
+.carousel-container { position: relative; width: 100%; }
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  z-index: 10;
+}
+.carousel-btn:hover { background: rgba(0, 0, 0, 0.8); }
+.carousel-btn.prev { left: 10px; }
+.carousel-btn.next { right: 10px; }
+
+/* === Explainable AI Box === */
+.xai-box {
+  margin-top: 10px;
+  padding: 8px;
+  background: #f8f9ff;
+  border-left: 4px solid #4a90e2;
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: left;
+}
+.xai-box h4 {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+  color: #4a90e2;
+}
+.xai-box ul {
+  padding-left: 18px;
+  margin: 0;
+}
+.xai-box li { margin-bottom: 3px; }
+</style>
+
+{% endblock %}

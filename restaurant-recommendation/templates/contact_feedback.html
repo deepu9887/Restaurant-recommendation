@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block title %}Contact & Feedback | the Palate Guide{% endblock %}
+
+{% block content %}
+
+<section class="contact-feedback-page">
+  <div class="form-wrapper">
+    <h1>📞 Contact & ⭐ Feedback</h1>
+    <p class="intro">We’d love to hear from you! Send us a message or leave feedback about your experience.</p>
+
+    <!-- ✅ Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Contact Form -->
+    <div class="form-container">
+      <h2>📩 Contact Us</h2>
+      <form method="post" action="{{ url_for('contact_feedback_page') }}">
+        <input type="hidden" name="form_type" value="contact">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="message">Message:</label>
+        <textarea id="message" name="message" rows="4" required></textarea>
+
+        <button type="submit">📨 Send Message</button>
+      </form>
+    </div>
+
+    <!-- Feedback Form -->
+    <div class="form-container">
+      <h2>⭐ Leave Feedback</h2>
+      <form method="post" action="{{ url_for('contact_feedback_page') }}">
+        <input type="hidden" name="form_type" value="feedback">
+        <label for="fb_name">Name:</label>
+        <input type="text" id="fb_name" name="name" required>
+
+        <label for="fb_email">Email:</label>
+        <input type="email" id="fb_email" name="email" required>
+
+        <label for="rating">Rating:</label>
+        <select id="rating" name="rating" required>
+          <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+          <option value="4">⭐⭐⭐⭐ Good</option>
+          <option value="3">⭐⭐⭐ Average</option>
+          <option value="2">⭐⭐ Poor</option>
+          <option value="1">⭐ Very Bad</option>
+        </select>
+
+        <label for="fb_message">Feedback:</label>
+        <textarea id="fb_message" name="message" rows="4" required></textarea>
+
+        <button type="submit">✅ Submit Feedback</button>
+      </form>
+    </div>
+
+    <!-- Feedback List -->
+    <div class="feedback-list">
+      <h2>💬 Recent Feedback</h2>
+      {% if feedback %}
+        {% for f in feedback %}
+          <div class="feedback-card">
+            <h3>{{ f.name }} <span class="rating">⭐ {{ f.rating }}</span></h3>
+            <p><i>{{ f.date }}</i></p>
+            <p>{{ f.message }}</p>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>No feedback yet. Be the first to share your thoughts! ❤️</p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<style>
+/* Background same as restaurant page */
+.contact-feedback-page {
+  background: url("/static/images/restaurant-bg.jpg") no-repeat center center fixed;
+  background-size: cover;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 20px;
+}
+
+.form-wrapper {
+  background: rgba(255, 255, 255, 0.92);
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 900px;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+
+/* Headings */
+.contact-feedback-page h1 {
+  text-align: center;
+  color: #ff6a00;
+  margin-bottom: 10px;
+}
+.contact-feedback-page .intro {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 16px;
+  color: #333;
+}
+
+/* Flash Messages */
+.flash-messages {
+  margin: 20px 0;
+}
+.flash {
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  text-align: center;
+}
+.flash.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+.flash.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Form container */
+.form-container {
+  background: #fff;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+}
+.form-container h2 {
+  margin-bottom: 15px;
+  color: #ee0979;
+}
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+label {
+  font-weight: bold;
+  color: #333;
+}
+input, textarea, select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+  background: #fafafa;
+}
+button {
+  background: linear-gradient(90deg, #ff6a00, #ee0979);
+  color: white;
+  font-weight: bold;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+button:hover {
+  background: linear-gradient(90deg, #ee0979, #ff6a00);
+  transform: scale(1.05);
+}
+
+/* Feedback list */
+.feedback-list {
+  margin-top: 30px;
+}
+.feedback-list h2 {
+  color: #ff6a00;
+  margin-bottom: 15px;
+}
+.feedback-card {
+  background: #fff8f8;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+}
+.feedback-card h3 {
+  margin: 0;
+  color: #ee0979;
+}
+.feedback-card .rating {
+  font-size: 14px;
+  color: #ff6a00;
+  margin-left: 10px;
+}
+.feedback-card p {
+  margin: 5px 0;
+  color: #444;
+}
+</style>
+
+{% endblock %}

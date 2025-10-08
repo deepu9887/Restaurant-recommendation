@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Home | the Palate Guide{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<div class="hero">
+  <h1>Welcome to The Palate Guide 🍴</h1>
+  <p>Discover the best places to eat around you!</p>
+  <a href="{{ url_for('restaurants_page') }}" class="btn">Explore Restaurants</a>
+</div>
+
+<style>
+/* Background with gradient animation */
+body {
+  background: linear-gradient(-45deg, #ff6a00, #ee0979, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradientBG 12s ease infinite;
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Hero section */
+.hero {
+  text-align: center;
+  padding: 100px 20px;
+  color: white;
+  animation: fadeIn 2s ease-in-out;
+}
+.hero h1 {
+  font-size: 52px;
+  margin-bottom: 20px;
+  animation: floatText 3s ease-in-out infinite;
+}
+.hero p {
+  font-size: 22px;
+  margin-bottom: 30px;
+  opacity: 0.9;
+}
+.btn {
+  display: inline-block;
+  padding: 14px 28px;
+  background: #fff;
+  color: #ee0979;
+  font-size: 20px;
+  font-weight: bold;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+}
+.btn:hover {
+  background: #ff6a00;
+  color: white;
+  box-shadow: 0px 6px 20px rgba(0,0,0,0.3);
+  transform: scale(1.05);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes floatText {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+</style>
+
+{% endblock %}

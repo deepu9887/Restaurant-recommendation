@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Page Title -->
+  <title>{% block title %}The Palate Guide | Flavour Map{% endblock %}</title>
+
+  <meta name="theme-color" content="#ff6a00" />
+
+  <!-- Favicon / Logo -->
+  <link rel="icon" href="{{ url_for('static', filename='images/palate_logo.png') }}" />
+
+  <!-- 0) Apply saved/system theme BEFORE paint to avoid flash -->
+  <script>
+    (function () {
+      const KEY = 'palate_dark_mode';
+      const saved = localStorage.getItem(KEY);
+      const preferDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const enableDark = saved === null ? preferDark : (saved === 'true');
+      document.documentElement.setAttribute('data-theme', enableDark ? 'dark' : 'light');
+    })();
+  </script>
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=5" />
+
+  <style>
+    /* Navbar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(90deg, #ff6a00, #ee0979);
+      padding: 12px 20px;
+      color: #fff;
+      position: relative;
+      z-index: 1000;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand img { height: 40px; width: auto; border-radius: 6px; display: block; }
+    .logo { font-size: 20px; font-weight: 800; letter-spacing: .3px; }
+    .nav-links { list-style: none; display: flex; gap: 18px; margin: 0; padding: 0; align-items: center; }
+    .nav-links li a { text-decoration: none; color: #fff; font-weight: 700; font-size: 15px; transition: color .3s ease; }
+    .nav-links li a:hover { color: #ffd700; }
+
+    /* Hamburger */
+    .hamburger { font-size: 26px; cursor: pointer; border: none; background: none; color: #fff; margin-right: 12px; }
+
+    /* Sidebar */
+    .sidebar {
+      height: 100%; width: 0; position: fixed; top: 0; left: 0;
+      background: linear-gradient(180deg, #ee0979, #ff6a00);
+      overflow-x: hidden; transition: width .35s ease-in-out;
+      padding-top: 60px; z-index: 2000;
+    }
+    .sidebar.open { width: 250px; }
+    .sidebar a { padding: 12px 24px; text-decoration: none; font-size: 18px; color: #fff; display: block; transition: background .2s; }
+    .sidebar a:hover { background: rgba(255,255,255,.2); }
+    .sidebar .closebtn { position: absolute; top: 15px; right: 20px; font-size: 30px; cursor: pointer; }
+
+    /* Flash Messages */
+    .flash-messages { text-align: center; margin: 10px auto; }
+    .flash-messages .success { color: #1b873f; font-weight: bold; }
+    .flash-messages .error { color: #c62828; font-weight: bold; }
+    .flash-messages .info { color: #1769aa; font-weight: bold; }
+
+    /* Footer */
+    .footer {
+      margin-top: 40px; padding: 18px 16px;
+      background: linear-gradient(90deg, #ee0979, #ff6a00);
+      color: #fff; text-align: center; border-top: 3px solid #ffd700;
+    }
+    .footer-brand { display:inline-flex; align-items:center; justify-content:center; margin: 4px auto 10px; text-decoration:none; }
+    .footer-brand img { height: 32px; width:auto; border-radius:6px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.25)); }
+
+    /* 🌙 Toggle switch */
+    .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
+    .switch input { display: none; }
+    .slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background-color: #ccc; transition: .4s; border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px;
+      left: 3px; bottom: 3px; background-color: #fff;
+      transition: .4s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #ff6a00; }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    /* ===================== DARK THEME ===================== */
+    /* Use attribute on <html> so it works on every page that extends base.html */
+    html[data-theme="dark"] body { background: #121212; color: #f5f5f5; }
+    html[data-theme="dark"] .navbar,
+    html[data-theme="dark"] .footer,
+    html[data-theme="dark"] .sidebar { background: #1e1e1e; color: #f5f5f5; }
+    html[data-theme="dark"] .nav-links li a,
+    html[data-theme="dark"] .sidebar a { color: #f5f5f5; }
+    html[data-theme="dark"] .nav-links li a:hover,
+    html[data-theme="dark"] .sidebar a:hover { color: #ffd700; }
+    html[data-theme="dark"] .footer { border-top: 3px solid #444; }
+
+    /* Cards & modals */
+    html[data-theme="dark"] .card,
+    html[data-theme="dark"] .rec-card,
+    html[data-theme="dark"] .modal-content,
+    html[data-theme="dark"] .wishlist,
+    html[data-theme="dark"] .recommendations {
+      background: #1e1e1e; color: #e0e0e0; box-shadow: 0 4px 12px rgba(255,255,255,.05);
+    }
+    html[data-theme="dark"] .card h3,
+    html[data-theme="dark"] .rec-card h4,
+    html[data-theme="dark"] .modal-content h3 { color: #ffb74d; }
+    html[data-theme="dark"] .card button,
+    html[data-theme="dark"] .scroll-btn { background: #ff6a00; color:#fff; }
+    html[data-theme="dark"] .card button:hover,
+    html[data-theme="dark"] .scroll-btn:hover { background:#ee0979; }
+    /* ===================================================== */
+
+    @media (max-width: 560px) {
+      .logo { font-size: 18px; }
+      .brand img { height: 34px; }
+      .footer-brand img { height: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <header class="navbar" role="navigation" aria-label="Main">
+    <div class="brand">
+      <button class="hamburger" aria-label="Open menu" onclick="openSidebar()">☰</button>
+      <a href="{{ url_for('homepage') }}" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;">
+        <img src="{{ url_for('static', filename='images/palate_logo.png') }}" alt="The Palate Guide logo" />
+        <div class="logo">The Palate Guide</div>
+      </a>
+    </div>
+
+    <ul class="nav-links">
+      <li><a href="{{ url_for('homepage') }}">Home</a></li>
+      <li><a href="{{ url_for('restaurants_page') }}">Restaurants</a></li>
+      <li><a href="{{ url_for('wishlist_page') }}">Wishlist</a></li>
+      <li><a href="{{ url_for('about_page') }}">About</a></li>
+      <li><a href="{{ url_for('contact_feedback_page') }}">Contact & Feedback</a></li>
+      {% if session.get('user') %}
+        <li><a href="#" aria-label="Signed in user">👋 {{ session['user'] }}</a></li>
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+      {% else %}
+        <li><a href="{{ url_for('auth_page') }}">Login / Signup</a></li>
+      {% endif %}
+      <li>
+        <label class="switch" title="Toggle dark mode">
+          <input type="checkbox" id="darkModeToggle" />
+          <span class="slider"></span>
+        </label>
+      </li>
+    </ul>
+  </header>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar" aria-label="Mobile menu">
+    <a href="javascript:void(0)" class="closebtn" aria-label="Close menu" onclick="closeSidebar()">&times;</a>
+    <a href="{{ url_for('homepage') }}" onclick="closeSidebar()">🏠 Home</a>
+    <a href="{{ url_for('restaurants_page') }}" onclick="closeSidebar()">🍴 Restaurants</a>
+    <a href="{{ url_for('wishlist_page') }}" onclick="closeSidebar()">❤️ Wishlist</a>
+    <a href="{{ url_for('about_page') }}" onclick="closeSidebar()">ℹ️ About</a>
+    <a href="{{ url_for('contact_feedback_page') }}" onclick="closeSidebar()">📞⭐ Contact & Feedback</a>
+    {% if session.get('user') %}
+      <a href="#" onclick="closeSidebar()">👋 Welcome, {{ session['user'] }}</a>
+      <a href="{{ url_for('logout') }}" onclick="closeSidebar()">🚪 Logout</a>
+    {% else %}
+      <a href="{{ url_for('auth_page') }}" onclick="closeSidebar()">🔑 Login / Signup</a>
+    {% endif %}
+  </aside>
+
+  <!-- Flash Messages -->
+  <div class="flash-messages" role="status" aria-live="polite">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Content -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <a href="{{ url_for('homepage') }}" class="footer-brand" aria-label="Go to Home">
+      <img src="{{ url_for('static', filename='images/palate_logo.png') }}" alt="The Palate Guide logo" />
+    </a>
+    <p>© 2025 <strong>The Palate Guide</strong> — Flavour Map • Discover the Science of Taste 🍽️</p>
+  </footer>
+
+  <!-- Sidebar Script -->
+  <script>
+    function openSidebar() { document.getElementById("sidebar").classList.add("open"); }
+    function closeSidebar() { document.getElementById("sidebar").classList.remove("open"); }
+  </script>
+
+  <!-- Dark mode controller (works on every page) -->
+  <script>
+    (function () {
+      const KEY = 'palate_dark_mode';
+      const box = document.getElementById('darkModeToggle');
+      const root = document.documentElement;
+
+      function setTheme(on) { root.setAttribute('data-theme', on ? 'dark' : 'light'); }
+
+      // Initialize checkbox from current html[data-theme]
+      if (box) box.checked = root.getAttribute('data-theme') === 'dark';
+
+      // Toggle + persist
+      box && box.addEventListener('change', function () {
+        const enabled = !!this.checked;
+        setTheme(enabled);
+        try { localStorage.setItem(KEY, String(enabled)); } catch (_) {}
+      });
+
+      // If user hasn’t set a choice, follow system changes live
+      const saved = localStorage.getItem(KEY);
+      if (saved === null && window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        mq.addEventListener && mq.addEventListener('change', e => {
+          setTheme(e.matches);
+          if (box) box.checked = e.matches;
+        });
+      }
+    })();
+  </script>
+
+  <!-- JS bundle -->
+  <script src="{{ url_for('static', filename='js/main.js') }}?v=5"></script>
+</body>
+</html>

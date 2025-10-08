@@ -1,0 +1,17 @@
+[
+  { "user": "alice", "restaurant": "Domino's Pizza", "rating": 4.5, "date": "2025-09-19T10:00:00" },
+  { "user": "alice", "restaurant": "KFC", "rating": 4.0, "date": "2025-09-19T10:05:00" },
+  { "user": "alice", "restaurant": "Burger King", "rating": 3.5, "date": "2025-09-19T10:10:00" },
+
+  { "user": "bob", "restaurant": "KFC", "rating": 5.0, "date": "2025-09-19T11:00:00" },
+  { "user": "bob", "restaurant": "McDonald's", "rating": 4.2, "date": "2025-09-19T11:05:00" },
+  { "user": "bob", "restaurant": "Subway", "rating": 3.8, "date": "2025-09-19T11:10:00" },
+
+  { "user": "carol", "restaurant": "Domino's Pizza", "rating": 4.8, "date": "2025-09-19T12:00:00" },
+  { "user": "carol", "restaurant": "Pizza Hut", "rating": 4.6, "date": "2025-09-19T12:05:00" },
+  { "user": "carol", "restaurant": "Subway", "rating": 4.1, "date": "2025-09-19T12:10:00" },
+
+  { "user": "david", "restaurant": "Burger King", "rating": 4.0, "date": "2025-09-19T13:00:00" },
+  { "user": "david", "restaurant": "McDonald's", "rating": 4.3, "date": "2025-09-19T13:05:00" },
+  { "user": "david", "restaurant": "Pizza Hut", "rating": 3.9, "date": "2025-09-19T13:10:00" }
+]

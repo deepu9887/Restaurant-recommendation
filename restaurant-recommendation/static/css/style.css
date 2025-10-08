@@ -1,0 +1,650 @@
+/* ========== Global Styles ========== */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f6d365, #fda085);
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* ========== Navbar ========== */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #ff6a00, #ee0979);
+  padding: 12px 30px;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 20px;
+}
+
+.nav-links li a {
+  text-decoration: none;
+  color: white;
+  font-size: 16px;
+  transition: 0.3s;
+}
+
+.nav-links li a:hover {
+  color: #ffd700;
+}
+
+/* ========== Filters Section ========== */
+.filters {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin: 20px auto;
+  padding: 12px;
+}
+
+/* Search Box */
+.filters input[type="text"] {
+  background-color: #fdfdfd;   /* softer than pure white */
+  border: 1.5px solid #ccc;    /* neutral border */
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 14px;
+  width: 220px;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.filters input[type="text"]::placeholder {
+  color: #777;
+  font-style: italic;
+}
+
+.filters input[type="text"]:focus,
+.filters input[type="text"]:hover {
+  border-color: #ff4081;
+  box-shadow: 0 0 5px rgba(255,64,129,0.5);
+}
+
+/* Styled Select Boxes */
+.filters select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-color: #fdfdfd;   /* light background */
+  color: #333;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.filters select:focus,
+.filters select:hover {
+  border-color: #ff4081;
+  box-shadow: 0 0 5px rgba(255,64,129,0.5);
+}
+
+.filters select option {
+  background-color: #fff;
+  color: #333;
+  padding: 10px;
+}
+
+/* Apply Button */
+.filters button {
+  background: #ff4081;
+  color: white;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  transition: 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.filters button:hover {
+  background: #e73370;
+}
+
+/* ========== Restaurant Grid ========== */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+  padding: 20px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 8px 20px rgba(0,0,0,0.25);
+}
+
+.card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.card-content {
+  padding: 15px;
+  background: #fff;
+}
+
+.card h3 {
+  margin: 0 0 12px 0;
+  color: #ff5722;
+}
+
+/* ========== Pagination ========== */
+#pagination {
+  text-align: center;
+  margin: 25px 0;
+}
+
+#pagination button {
+  padding: 10px 18px;
+  margin: 0 5px;
+  background: #ff6a00;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#pagination button:hover {
+  background: #ee0979;
+}
+
+#pagination button.active {
+  background: #23a6d5;
+  font-weight: bold;
+  transform: scale(1.1);
+}
+
+/* ========== Recommendations Slider (Netflix-style) ========== */
+.recommendations {
+  margin: 40px 20px;
+  padding: 20px;
+  background: #f9f9ff;
+  border-radius: 10px;
+}
+
+.recommendations h2 {
+  margin-bottom: 15px;
+  color: #ff6a00;
+  text-align: center;
+}
+
+.rec-slider-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.rec-slider {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  gap: 15px;
+  padding: 10px;
+}
+
+.rec-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.rec-card {
+  min-width: 220px;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  flex-shrink: 0;
+  transition: transform 0.3s;
+}
+
+.rec-card:hover {
+  transform: scale(1.05);
+}
+
+.rec-card img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+}
+
+/* Arrow buttons */
+.scroll-btn {
+  background: #ff6a00;
+  color: white;
+  border: none;
+  padding: 12px;
+  font-size: 18px;
+  border-radius: 50%;
+  transition: 0.3s;
+  margin: 0 10px;
+}
+
+.scroll-btn:hover {
+  background: #ee0979;
+}
+
+/* ========== Modal (Similar Restaurants) ========== */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 10% auto;
+  padding: 20px;
+  border-radius: 10px;
+  width: 80%;
+  max-width: 600px;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  color: #ff6a00;
+}
+
+.close {
+  float: right;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #888;
+}
+
+.close:hover {
+  color: #000;
+}
+
+/* ========== Home Page Hero ========== */
+.hero {
+  text-align: center;
+  padding: 80px 20px;
+  animation: fadeIn 2s ease-in-out;
+  background: url("../images/home-bg.jpg") no-repeat center center/cover;
+  color: white;
+  border-radius: 12px;
+}
+
+.hero h1 {
+  font-size: 48px;
+  color: #ff6a00;
+}
+
+.hero p {
+  font-size: 20px;
+  color: white;
+}
+
+.btn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 12px 25px;
+  background: #ee0979;
+  color: white;
+  font-size: 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: #ff6a00;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== Footer ========== */
+.footer {
+  background: linear-gradient(90deg, #ff6a00, #ee0979);
+  color: white;
+  text-align: center;
+  padding: 20px;
+  margin-top: 40px;
+}
+
+.footer p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* ========== Wishlist Section ========== */
+.wishlist {
+  margin: 30px auto;
+  padding: 20px;
+  max-width: 600px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.wishlist h2 {
+  color: #ff6a00;
+  margin-bottom: 10px;
+}
+
+.wishlist p {
+  margin: 5px 0;
+  font-size: 16px;
+}
+
+/* About Page */
+.about {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.about h1, .about h2 {
+  color: #ff6a00;
+  margin-bottom: 10px;
+}
+.about ul {
+  list-style: none;
+  padding: 0;
+}
+.about ul li {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+/* Contact Page */
+.contact {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.contact-form input, .contact-form textarea {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+.contact-form button {
+  background: #ee0979;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.contact-form button:hover {
+  background: #ff6a00;
+}
+
+/* Contact & Feedback page background */
+.contact-feedback-page {
+  background: url("/static/images/restaurant-bg.jpg") no-repeat center center fixed;
+  background-size: cover;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.contact-feedback-page .form-container {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* Contact & Feedback form button styling */
+.contact-feedback-page .form-container button {
+  background: linear-gradient(90deg, #ff6a00, #ee0979);
+  color: white;
+  font-weight: bold;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.contact-feedback-page .form-container button:hover {
+  background: linear-gradient(90deg, #ee0979, #ff6a00);
+  box-shadow: 0 4px 12px rgba(238, 9, 121, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Card Hover Effect */
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Image zoom on hover */
+.card img {
+  transition: transform 0.4s ease;
+  border-radius: 10px;
+}
+
+.card:hover img {
+  transform: scale(1.08);
+}
+
+/* Button hover */
+.card button {
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.card button:hover {
+  background: linear-gradient(90deg, #ee0979, #ff6a00);
+  transform: scale(1.05);
+}
+
+/* =========================
+   🌙 Dark Mode Styles
+   ========================= */
+body.dark-mode {
+  background: #121212;
+  color: #f5f5f5;
+}
+
+/* Navbar, Sidebar, Footer */
+body.dark-mode .navbar,
+body.dark-mode .footer,
+body.dark-mode .sidebar {
+  background: #1e1e1e !important;
+  color: #f5f5f5;
+}
+body.dark-mode .nav-links li a,
+body.dark-mode .sidebar a {
+  color: #f5f5f5;
+}
+body.dark-mode .nav-links li a:hover,
+body.dark-mode .sidebar a:hover {
+  color: #ffd700;
+}
+body.dark-mode .footer {
+  border-top: 3px solid #444;
+}
+
+/* Cards, Recommendations, Wishlist, Modals */
+body.dark-mode .card,
+body.dark-mode .rec-card,
+body.dark-mode .modal-content,
+body.dark-mode .wishlist,
+body.dark-mode .recommendations {
+  background: #1e1e1e !important;
+  color: #e0e0e0 !important;
+  box-shadow: 0px 4px 12px rgba(255,255,255,0.05);
+}
+body.dark-mode .card h3,
+body.dark-mode .rec-card h4,
+body.dark-mode .modal-content h3 {
+  color: #ffb74d;
+}
+body.dark-mode .card p,
+body.dark-mode .rec-card p,
+body.dark-mode .modal-content p {
+  color: #ddd;
+}
+
+/* Buttons */
+body.dark-mode .card button,
+body.dark-mode .scroll-btn {
+  background: #ff6a00;
+  color: #fff;
+}
+body.dark-mode .card button:hover,
+body.dark-mode .scroll-btn:hover {
+  background: #ee0979;
+}
+
+/* Default badge */
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  margin: 2px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+}
+
+/* Category-based colors */
+.badge-city { background: #4a90e2; }     /* Blue for 🏙 City */
+.badge-cuisine { background: #27ae60; } /* Green for 🍽 Cuisine */
+.badge-mood { background: #9b59b6; }    /* Purple for 😃 Mood */
+.badge-time { background: #e67e22; }    /* Orange for ⏰ Time */
+.badge-budget { background: #16a085; }  /* Teal for 💰 Budget */
+.badge-group { background: #d35400; }   /* Brown/Orange for 👥 Group */
+.badge-rating { background: #f1c40f; color: #000; } /* Gold for ⭐ Rating */
+.badge-default { background: #7f8c8d; } /* Gray fallback */
+
+/* ================= Carousel (Recommendations Slider) ================= */
+#recSlider {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  gap: 16px;
+  padding: 10px;
+  scrollbar-width: none; /* Firefox */
+  scroll-snap-type: x mandatory;
+}
+#recSlider::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge */
+}
+
+.rec-card {
+  flex: 0 0 auto;
+  width: 220px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  text-align: center;
+  padding: 10px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  scroll-snap-align: start;
+}
+.rec-card img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.rec-card:hover {
+  transform: scale(1.05);
+}
+
+/* ================= Carousel Navigation Buttons ================= */
+.carousel-container {
+  position: relative;
+  width: 100%;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  z-index: 10;
+}
+.carousel-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+.carousel-btn.prev {
+  left: 10px;
+}
+.carousel-btn.next {
+  right: 10px;
+}

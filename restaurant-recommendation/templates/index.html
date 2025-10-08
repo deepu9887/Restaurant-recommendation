@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Restaurants{% endblock %}
+{% block content %}
+
+<h1>Find Your Favorite Restaurant 🍕</h1>
+<div class="filters">
+  <input type="text" id="search" placeholder="Search by name...">
+  <select id="cityFilter"></select>
+  <select id="cuisineFilter"></select>
+  <select id="ratingFilter">
+    <option value="">Min Rating</option>
+    <option value="3">3+</option>
+    <option value="4">4+</option>
+    <option value="4.5">4.5+</option>
+  </select>
+  <button onclick="loadRestaurants()">Search</button>
+</div>
+
+<div class="grid" id="restaurantGrid"></div>
+<div id="pagination"></div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+{% endblock %}
