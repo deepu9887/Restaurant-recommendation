@@ -1,10 +1,14 @@
-setuptools>=65.5.1
-wheel
+# updated dependencies for render build
+
 Flask==3.0.3
 gunicorn==21.2.0
 
-# ML stack (compatible versions)
-numpy==1.24.4
-pandas==2.0.3
-scipy==1.10.1
-scikit-learn==1.3.2
+# ML stack (versions compatible with Python 3.11 on Render)
+numpy==1.26.4
+pandas==2.2.2
+scipy==1.11.4
+scikit-learn==1.4.2
+
+# Build helpers
+setuptools
+wheel
