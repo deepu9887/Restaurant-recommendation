@@ -1,12 +1,13 @@
-# updated dependencies for render build
+# Core build tools
 setuptools>=65.5.1
 wheel
 pip>=23.2
 
+# Web
 Flask==3.0.3
 gunicorn==21.2.0
 
-# ML stack pinned to py311 wheels (no compiling)
+# ML / Data
 numpy==1.26.4
 pandas==2.1.4
 scipy==1.11.4
