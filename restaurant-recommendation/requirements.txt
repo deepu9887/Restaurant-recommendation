@@ -1,14 +1,13 @@
 # updated dependencies for render build
+setuptools>=65.5.1
+wheel
+pip>=23.2
 
 Flask==3.0.3
 gunicorn==21.2.0
 
-# ML stack (versions compatible with Python 3.11 on Render)
+# ML stack pinned to py311 wheels (no compiling)
 numpy==1.26.4
-pandas==2.2.2
+pandas==2.1.4
 scipy==1.11.4
-scikit-learn==1.4.2
-
-# Build helpers
-setuptools
-wheel
+scikit-learn==1.3.2
