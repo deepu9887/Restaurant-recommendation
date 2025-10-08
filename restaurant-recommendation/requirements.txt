@@ -1,7 +1,9 @@
+setuptools>=65.5.1
+wheel
 Flask==3.0.3
 gunicorn==21.2.0
 
-# ML stack (light + compatible with Render)
+# ML stack (compatible versions)
 numpy==1.24.4
 pandas==2.0.3
 scipy==1.10.1
