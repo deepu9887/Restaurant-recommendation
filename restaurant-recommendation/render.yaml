@@ -1,8 +1,12 @@
 services:
   - type: web
-    name: restaurant-recommendation
+    name: Restaurant-recommendation
     env: python
     rootDir: restaurant-recommendation
-    pythonVersion: 3.11.9
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    buildCommand: pip install -r requirements.txt
+    startCommand: bash -lc 'gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 2 --worker-tmp-dir /dev/shm --timeout 120 --max-requests 200 --max-requests-jitter 40 --log-level warning'
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: WEB_CONCURRENCY
+        value: "1"
