@@ -1,11 +1,13 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session, flash
 import json
 import os
-import pandas as pd
 import datetime
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from collections import Counter
+from functools import lru_cache
+
+# ⚠️ NOTE:
+# We intentionally do NOT import pandas / sklearn at the top.
+# They are imported lazily inside helper functions to avoid memory spikes on startup.
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key_here"  # change to a secure random key in production
@@ -80,40 +82,52 @@ if not os.path.exists(RATINGS_PATH) or not load_ratings():
       { "user": "david", "restaurant": "McDonald's", "rating": 4.3, "date": "2025-09-19T13:05:00" },
       { "user": "david", "restaurant": "Pizza Hut", "rating": 3.9, "date": "2025-09-19T13:10:00" }
     ]
-    # Only write sample if file missing or currently empty (do not overwrite)
     if not os.path.exists(RATINGS_PATH) or len(load_ratings()) == 0:
         save_ratings(sample_ratings)
 
-# ---------- Load restaurants dataset ----------
+# ---------- Load restaurants dataset (lightweight) ----------
 restaurants = load_json(DATA_PATH, [])
 if not isinstance(restaurants, list):
     restaurants = []
 
-# ---------- ML Recommendations setup (content-based) ----------
-try:
+# ---------- ML (content-based) — LAZY LOADING ----------
+@lru_cache(maxsize=1)
+def _load_df_and_similarity():
+    """
+    Lazily import pandas/sklearn and build TF-IDF & cosine similarity.
+    Cached after first call to keep memory stable across requests.
+    """
+    import pandas as pd
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+
     df = pd.DataFrame(restaurants)
-    # normalize column names that might be in dataset
-    # prefer "Cuisines", "City", "Restaurant Name", "Aggregate rating", "Votes", "Average Cost for two"
-    if "Cuisines" not in df.columns:
-        df["Cuisines"] = ""
+    # normalize columns
+    for col in ("Cuisines", "City", "Restaurant Name"):
+        if col not in df.columns:
+            df[col] = ""
     df["Cuisines"] = df["Cuisines"].fillna("").astype(str)
-    if "City" not in df.columns:
-        df["City"] = ""
     df["City"] = df["City"].fillna("").astype(str)
-    if "Restaurant Name" not in df.columns:
-        df["Restaurant Name"] = df.index.astype(str)
+    # ensure there is a name
+    if df["Restaurant Name"].isna().any():
+        df["Restaurant Name"] = df["Restaurant Name"].fillna(df.index.astype(str))
+
+    # keep only columns we need to reduce memory
+    df_small = df[["Restaurant Name", "City", "Cuisines", "Aggregate rating", "Votes"]].copy()
 
     tfidf = TfidfVectorizer(stop_words="english")
-    tfidf_matrix = tfidf.fit_transform(df["Cuisines"].astype(str) + " " + df["City"].astype(str))
-    cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
-except Exception:
-    df = pd.DataFrame(columns=["Restaurant Name", "City", "Cuisines", "Aggregate rating", "Votes"])
-    cosine_sim = None
+    tfidf_matrix = tfidf.fit_transform((df_small["Cuisines"] + " " + df_small["City"]).astype(str))
+    cos = cosine_similarity(tfidf_matrix, tfidf_matrix)
+
+    return df_small, cos
 
 def recommend_restaurants(name, n=5):
     """ Content-based recommendations using cosine similarity on (Cuisines + City). """
-    if cosine_sim is None:
+    try:
+        df, cosine_sim = _load_df_and_similarity()
+    except Exception:
         return []
+
     mask = df["Restaurant Name"].astype(str) == str(name)
     if not mask.any():
         return []
@@ -121,13 +135,13 @@ def recommend_restaurants(name, n=5):
         idx = int(df[mask].index[0])
     except Exception:
         return []
+
     sim_scores = list(enumerate(cosine_sim[idx]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
     sim_scores = sim_scores[1:n + 1]
     restaurant_indices = [i[0] for i in sim_scores]
-    return df.iloc[restaurant_indices][
-        ["Restaurant Name", "City", "Cuisines", "Aggregate rating", "Votes"]
-    ].to_dict(orient="records")
+    cols = ["Restaurant Name", "City", "Cuisines", "Aggregate rating", "Votes"]
+    return df.iloc[restaurant_indices][cols].to_dict(orient="records")
 
 # ---------- Helpers ----------
 def safe_float(x, default=0.0):
@@ -144,14 +158,6 @@ def safe_int(x, default=0):
 
 # ---------- Explainable AI helper ----------
 def explain_recommendation(user_preferences, restaurant):
-    """
-    Returns a dict { "text": "...", "class": "why-high"/"why-medium"/"why-low"/"why-neutral" }
-    Uses restaurant fields commonly present in dataset:
-      - 'Cuisines' (string, comma separated)
-      - 'City'
-      - 'Aggregate rating' (numeric)
-      - 'Average Cost for two' (numeric-ish)
-    """
     reasons = []
     rating_class = "why-neutral"
 
@@ -172,7 +178,6 @@ def explain_recommendation(user_preferences, restaurant):
         reasons.append(f"it has a decent rating of {ar}★")
         rating_class = "why-medium"
     else:
-        # keep reason but mark low
         reasons.append(f"rating is {ar}★")
         rating_class = "why-low"
 
@@ -193,7 +198,6 @@ def explain_recommendation(user_preferences, restaurant):
         except Exception:
             pass
 
-    # fallback
     if not reasons:
         reasons = ["matches your preferences"]
         rating_class = "why-neutral"
@@ -206,48 +210,28 @@ def explain_recommendation(user_preferences, restaurant):
 # ---------- Routes ----------
 @app.route("/")
 def homepage():
-    # For homepage we might still want recommendations — keep as-is or compute separately in template
     return render_template("home.html")
 
 @app.route("/restaurants")
 def restaurants_page():
-    """
-    Render the main 'All Restaurants' page. This route now:
-      - computes explainable reasons for each restaurant based on user prefs (session or defaults)
-      - computes top cuisines, top cities and top rated for rendering inline charts at bottom
-    """
-    # Default user preferences (fallback). Replace with real user prefs if you store them in session
-    user_prefs = session.get("user_prefs", {
-        "cuisines": [],   # example: ["North Indian", "Chinese"]
-        "budget": None,   # example: 500
-        "city": None
-    })
+    user_prefs = session.get("user_prefs", {"cuisines": [], "budget": None, "city": None})
 
-    # Build updated restaurants list with explanation and CSS class
     updated_restaurants = []
     for r in restaurants:
         expl = explain_recommendation(user_prefs, r)
-        # add human-friendly keys used in templates (avoid mutating original object too much)
-        r_copy = dict(r)  # shallow copy
+        r_copy = dict(r)
         r_copy["explanation"] = expl["text"]
         r_copy["explain_class"] = expl["class"]
-
-        # Normalize some fields for templates (compatibility)
-        # Some templates expect specific keys used earlier: "Restaurant Name", "Aggregate rating", "Votes", "Average Cost for two"
         if "Restaurant Name" not in r_copy and "name" in r_copy:
             r_copy["Restaurant Name"] = r_copy.get("name")
         if "Aggregate rating" not in r_copy:
-            # try other possible keys
             r_copy["Aggregate rating"] = r_copy.get("rating") or r_copy.get("Aggregate rating", 0)
         if "Votes" not in r_copy:
             r_copy["Votes"] = r_copy.get("votes", 0)
         if "Average Cost for two" not in r_copy:
             r_copy["Average Cost for two"] = r_copy.get("cost", r_copy.get("Average Cost for two", 0))
-
         updated_restaurants.append(r_copy)
 
-    # ---------- Insights for charts (top cuisines, top cities, top rated) ----------
-    # Top cuisines
     cuisines_counter = Counter()
     for r in restaurants:
         c_field = r.get("Cuisines") or r.get("cuisine") or ""
@@ -257,7 +241,6 @@ def restaurants_page():
                 cuisines_counter[cs] += 1
     top_cuisines = cuisines_counter.most_common(5)
 
-    # Top cities
     cities_counter = Counter()
     for r in restaurants:
         city = r.get("City") or r.get("city") or ""
@@ -265,9 +248,7 @@ def restaurants_page():
             cities_counter[str(city).strip()] += 1
     top_cities = cities_counter.most_common(5)
 
-    # Top rated restaurants (use Aggregate rating)
     top_rated = sorted(restaurants, key=lambda x: safe_float(x.get("Aggregate rating", x.get("rating", 0))), reverse=True)[:5]
-    # normalize top_rated entries to include name and rating keys expected in chart rendering
     top_rated_normalized = []
     for r in top_rated:
         top_rated_normalized.append({
@@ -405,11 +386,8 @@ def get_restaurants():
         except Exception:
             pass
 
-    # ---------- Build richer explanations (XAI-style) ----------
     for r in filtered:
         reasons = []
-
-        # Context matches (if provided in query)
         if mood and mood in str(r.get("Mood", "")).lower():
             reasons.append(f"Mood={mood.title()}")
         if time and time in str(r.get("Time", "")).lower():
@@ -419,7 +397,6 @@ def get_restaurants():
         if group and group in str(r.get("Group", "")).lower():
             reasons.append(f"Group={group}")
 
-        # Rating & votes
         ar = safe_float(r.get("Aggregate rating", 0))
         if ar >= 4.5:
             reasons.append(f"Highly rated ⭐ {ar}")
@@ -432,7 +409,6 @@ def get_restaurants():
         elif v >= 200:
             reasons.append(f"Well-reviewed (votes: {v})")
 
-        # Cuisine and city
         cuisines = str(r.get("Cuisines", "")).strip()
         if cuisines:
             first_cuisine = cuisines.split(",")[0].strip()
@@ -442,14 +418,11 @@ def get_restaurants():
         if r.get("City"):
             reasons.append(f"City: {r.get('City')}")
 
-        # If nothing specific, general match
         if not reasons:
             reasons = ["General match"]
 
-        # join with pipe so frontend renderExplanations() can split & style badges
         r["explanation"] = " | ".join(reasons)
 
-    # ---------- Sorting ----------
     try:
         if sort == "rating":
             filtered = sorted(filtered, key=lambda r: safe_float(r.get("Aggregate rating", 0)), reverse=True)
@@ -494,12 +467,6 @@ def get_filters():
 # ---------- API: Trending Recommendations (context-aware) ----------
 @app.route("/api/recommendations")
 def trending_recommendations():
-    """
-    Returns trending recommendations. Supports optional context query params:
-    - weather (e.g., rainy, sunny)
-    - time (e.g., morning, afternoon, evening)
-    If context provided, apply simple rules to prioritize matching cuisines.
-    """
     weather = request.args.get("weather", "").strip().lower()
     time_of_day = request.args.get("time", "").strip().lower()
 
@@ -514,42 +481,30 @@ def trending_recommendations():
     trending = [r for r in restaurants if safe_float(r.get("Aggregate rating", 0)) > 0]
     trending = sorted(trending, key=key_func, reverse=True)
 
-    # If context provided, score/prioritize by simple rules
     if weather or time_of_day:
         prioritized = []
-
         for r in trending:
             cuisines_text = str(r.get("Cuisines", "")).lower()
             score = 0.0
-
-            # weather rules
             if weather == "rainy":
-                # prioritize soups/tea/hot snacks
                 if any(k in cuisines_text for k in ["soup", "tea", "hot snack", "snack", "pakora", "chai"]):
                     score += 30
             elif weather == "sunny":
                 if any(k in cuisines_text for k in ["ice cream", "juice", "cold", "smoothie", "beverage"]):
                     score += 20
-
-            # time rules
             if time_of_day == "morning":
                 if any(k in cuisines_text for k in ["breakfast", "brunch", "pancake", "coffee"]):
                     score += 40
             elif time_of_day == "evening":
                 if any(k in cuisines_text for k in ["dinner", "snack", "street food"]):
                     score += 25
-
-            # base rating & votes boost
             score += safe_float(r.get("Aggregate rating", 0)) * 2
             score += safe_int(r.get("Votes", 0)) / 100.0
-
             prioritized.append((score, r))
-
         prioritized = sorted(prioritized, key=lambda x: x[0], reverse=True)
         result = [r for s, r in prioritized][:10]
         return jsonify(result)
 
-    # default trending
     return jsonify(trending[:10])
 
 # ---------- API: ML-based Recommendations ----------
@@ -583,36 +538,28 @@ def get_recommendations():
 # ---------- API: Hybrid Recommender ----------
 @app.route("/api/recommend/hybrid")
 def get_hybrid_recommendations():
-    """
-    Simple hybrid recommender:
-    - content_recs: recommend_restaurants(name)
-    - collaborative: use stored ratings in data/ratings.json to find popular restaurants among similar users
-    - combine both lists (dedupe) and return top N
-    Query params:
-      - name (restaurant name for content-based seed)
-      - user (optional; session user used if logged in)
-    """
     name = request.args.get("name", "")
-    user = session.get("user", None)  # uses session if user logged in
+    user = session.get("user", None)
     content_recs = recommend_restaurants(name, n=6) if name else []
 
-    # Collaborative part
+    # Collaborative part (lazy import pandas/sklearn)
     ratings = load_ratings()
     collab_recs = []
     try:
         if ratings and user:
+            import pandas as pd
+            from sklearn.metrics.pairwise import cosine_similarity
+
             df_r = pd.DataFrame(ratings)
             if {"user", "restaurant", "rating"}.issubset(df_r.columns) and len(df_r) > 0:
                 pivot = df_r.pivot_table(index="user", columns="restaurant", values="rating").fillna(0)
                 if user in pivot.index:
-                    # compute user-user cosine similarity
                     user_vectors = pivot.values
                     sim = cosine_similarity(user_vectors)
+                    import pandas as pd as _pd  # make sure name exists if reused
                     sim_df = pd.DataFrame(sim, index=pivot.index, columns=pivot.index)
-                    # take top similar users
                     sim_scores = sim_df.loc[user].sort_values(ascending=False)
-                    top_users = sim_scores.index[1:4].tolist()  # up to 3 similar users
-                    # restaurants that those users liked (average rating >= 4)
+                    top_users = sim_scores.index[1:4].tolist()
                     liked = df_r[df_r["user"].isin(top_users)].groupby("restaurant")["rating"].mean()
                     liked = liked[liked >= 4.0].sort_values(ascending=False)
                     top_restaurants = liked.index.tolist()[:6]
@@ -620,35 +567,24 @@ def get_hybrid_recommendations():
     except Exception:
         collab_recs = []
 
-    # Merge content + collaborative maintaining order and dedupe by Restaurant Name
-    combined = []
-    seen = set()
+    combined, seen = [], set()
     for r in content_recs + collab_recs:
         name_key = r.get("Restaurant Name")
-        if not name_key:
-            continue
-        if name_key in seen:
+        if not name_key or name_key in seen:
             continue
         seen.add(name_key)
-        # ensure explanation present
         if "explanation" not in r:
             r["explanation"] = "Hybrid recommendation"
         combined.append(r)
 
-    # if nothing found, fallback to top trending
     if not combined:
         combined = (restaurants[:10] if restaurants else [])
 
     return jsonify(combined[:10])
 
-# ---------- API: Save rating (for collaborative filtering) ----------
+# ---------- API: Save rating ----------
 @app.route("/api/rate", methods=["POST"])
 def save_rating():
-    """
-    Save a user rating for a restaurant.
-    Expects JSON: { "restaurant": "<Restaurant Name>", "rating": 4.5 }
-    User is taken from session or 'guest'.
-    """
     data = request.json or {}
     restaurant = data.get("restaurant")
     rating = data.get("rating")
@@ -662,7 +598,6 @@ def save_rating():
         return jsonify({"message": "invalid rating"}), 400
 
     ratings = load_ratings()
-    # optional: replace existing rating by same user for same restaurant
     updated = False
     for r in ratings:
         if r.get("user") == user and r.get("restaurant") == restaurant:
@@ -714,4 +649,5 @@ def analytics():
 
 # ---------- Run ----------
 if __name__ == "__main__":
+    # Local dev only; on Render, gunicorn runs with the Procfile/startCommand
     app.run(debug=True, host="0.0.0.0", port=5000)
