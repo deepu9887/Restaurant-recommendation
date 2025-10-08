@@ -2,6 +2,7 @@ services:
   - type: web
     name: restaurant-recommendation
     env: python
-    plan: free
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"
+    rootDir: restaurant-recommendation
+    pythonVersion: 3.11.9
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: gunicorn app:app
